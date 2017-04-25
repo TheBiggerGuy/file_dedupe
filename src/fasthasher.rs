@@ -1,25 +1,25 @@
 use std::result::Result::Ok;
 use std::io::{self, Read};
-use std::path::{Path, PathBuf};
-use std::fs::{self, ReadDir, OpenOptions};
+use std::path::PathBuf;
+use std::fs::OpenOptions;
 use std::cell::RefCell;
 
-use crc::crc64::{self, Hasher64};
+use crc::crc32::{self, Hasher32};
 
 struct FastHasher {
-    digest: crc64::Digest,
+    digest: crc32::Digest,
     buffer: Vec<u8>,
 }
 
 impl FastHasher {
     fn new(buffer_size: usize) -> FastHasher {
         FastHasher {
-            digest: crc64::Digest::new(crc64::ISO),
+            digest: crc32::Digest::new(crc32::IEEE),
             buffer: vec![0u8; buffer_size],
         }
     }
 
-    fn hash(&mut self, path: &PathBuf) -> io::Result<u64> {
+    fn hash(&mut self, path: &PathBuf) -> io::Result<u32> {
         let mut file = OpenOptions::new()
             .read(true)
             .write(false)
@@ -27,22 +27,20 @@ impl FastHasher {
             .open(path)?;
 
         self.digest.reset();
-        self.buffer.clear();
         loop {
             let read = file.read(&mut self.buffer)?;
             if read == 0 {
                 break;
             }
-            println!("{:?}", &self.buffer[..read]);
             self.digest.write(&self.buffer[..read]);
         }
-        Ok(self.digest.sum64())
+        Ok(self.digest.sum32())
     }
 }
 
 thread_local!(static THREAD_LOCAL_FAST_HASHER: RefCell<FastHasher> =
     RefCell::new(FastHasher::new(4 * 1024)));
 
-pub fn fast_hash(path: &PathBuf) -> io::Result<u64> {
+pub fn fast_hash(path: &PathBuf) -> io::Result<u32> {
     THREAD_LOCAL_FAST_HASHER.with(|hasher| hasher.borrow_mut().hash(&path))
 }

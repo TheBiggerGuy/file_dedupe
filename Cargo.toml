@@ -13,6 +13,9 @@ clippy = {version = "*", optional = true}
 walkdir = "1"
 jobsteal = "*"
 crc = "*"
+chashmap = "2.2.x"
+crossbeam = "*"
+zip = "0.2.x"
 
 [dev-dependencies]
 env_logger = "0.4.x"
