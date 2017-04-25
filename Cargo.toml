@@ -1,0 +1,19 @@
+[package]
+name = "file_dedupe"
+version = "0.1.0"
+authors = ["Guy Taylor <thebigguy.co.uk@gmail.com>"]
+
+[features]
+default = []
+
+[dependencies]
+log = "0.3.x"
+clap = "~2.19.0"
+clippy = {version = "*", optional = true}
+walkdir = "1"
+jobsteal = "*"
+crc = "*"
+
+[dev-dependencies]
+env_logger = "0.4.x"
+
