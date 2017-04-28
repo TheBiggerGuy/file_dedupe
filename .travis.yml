@@ -1,38 +1,97 @@
-sudo: false
+# Based on the "trust" template v0.1.1
+# https://github.com/japaric/trust/tree/v0.1.1
+
+dist: trusty
 language: rust
-addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - cmake
-      - gcc
-      - binutils-dev
-cache: cargo
-rust:
-  - nightly
+services: docker
+sudo: required
+
+# Rust builds on stable by default, this can be
+# overridden on a case by case basis down below.
+
+env:
+  global:
+    # This to match the name of your project.
+    - CRATE_NAME=file_dedupe
+
 matrix:
-  allow_failures:
-    - rust: nightly
-before_script:
+  # These are all the build jobs.
+  include:
+    # Linux
+    - env: TARGET=i686-unknown-linux-gnu
+    #- env: TARGET=i686-unknown-linux-musl
+    - env: TARGET=x86_64-unknown-linux-gnu
+    - env: TARGET=x86_64-unknown-linux-musl
+
+    # OSX
+    #- env: TARGET=i686-apple-darwin
+    #  os: osx
+    - env: TARGET=x86_64-apple-darwin
+      os: osx
+
+    # *BSD
+    #- env: TARGET=i686-unknown-freebsd DISABLE_TESTS=1
+    - env: TARGET=x86_64-unknown-freebsd DISABLE_TESTS=1
+    #- env: TARGET=x86_64-unknown-netbsd DISABLE_TESTS=1
+
+    # Other architectures
+    - env: TARGET=aarch64-unknown-linux-gnu
+    - env: TARGET=armv7-unknown-linux-gnueabihf
+    #- env: TARGET=mips-unknown-linux-gnu
+    #- env: TARGET=mips64-unknown-linux-gnuabi64
+    #- env: TARGET=mips64el-unknown-linux-gnuabi64
+    #- env: TARGET=mipsel-unknown-linux-gnu
+    #- env: TARGET=powerpc-unknown-linux-gnu
+    #- env: TARGET=powerpc64-unknown-linux-gnu
+    #- env: TARGET=powerpc64le-unknown-linux-gnu
+    #- env: TARGET=s390x-unknown-linux-gnu DISABLE_TESTS=1
+
+    # Testing other channels
+    - env: TARGET=x86_64-unknown-linux-gnu
+      rust: beta
+    - env: TARGET=x86_64-unknown-linux-gnu
+      rust: nightly
+
+before_install: set -e
+
+install:
+  - sh ci/install.sh
+  - source ~/.cargo/env || true
   - export PATH="$PATH:$HOME/.cargo/bin"
   - which rustfmt || cargo install rustfmt
+
 script:
   - cargo fmt -- --write-mode=diff
-  - cargo build
-  - cargo test
-after_success: |
-  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-  tar xzf master.tar.gz &&
-  cd kcov-master &&
-  mkdir build &&
-  cd build &&
-  cmake .. &&
-  make &&
-  sudo make install &&
-  cd ../.. &&
-  rm -rf kcov-master &&
-  for file in target/debug/iprange-*; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-  bash <(curl -s https://codecov.io/bash) &&
-  echo "Uploaded code coverage"
+  - bash ci/script.sh
+
+after_script: set +e
+
+before_deploy:
+  - sh ci/before_deploy.sh
+
+deploy:
+  api_key:
+    secure: "MQuv51ASHj3YZ86dkoSHqWA44QNK33MK+C1kQgdN42b3d8FeBXBwUgy4HJhjYfrpB3IpnFSE9QTYTep7/7Q9ZtdE106ergIuStKwX40aK953FldS3iq3+XU7G91KK1PlagZYoreTepdgd9DdcXPoGXlZFXzpL8uLaOvyBQVnC+cyIyInuXmXediFAc4Jtnw7q61TLpBQ1jQLMiwdfsH7H6gkOhm4bG23kw7Wr3h74bK6P1oJ4w1tkA/6zRXFqVgu9M1F1qouKC/NuUAEQF47UzFsm79nsLwiltDaesdLiXOSD6SNDgQL+h3JoQK1eCZm8lRQ6MnuADxuG5zhdpK/edVd8qQyueuFcyji/IST2nvDqG3B2jmIxNbw4RRZ2K4y4rQmdi4/8ghXynur+gTIlNajTx8IoVTHMBrhCcULkKt3a+e0by2rjd4Z47oPbbwjb5kaHkPkkof9BSqIKy7k67Vg1lVnsYLZs9intex0vmJQ07tCMTU3pSX9aWO8y0vJ2uww8yRepXPzI9PPOOGfd+0zUki9nONBdFN2qmctpBjJxAeT1jOvwi+j2KEI17qlMqTZwVskBzZPDjftiyZVCKOZxeuhjY8W/t34wUyo5l/gWyPeFEpzCVaY4WGZqzAplMErWk6Qgh4IHcts4zEx4BSzFC+uB364u2583hZBuGo="
+  file_glob: true
+  file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
+  on:
+    # Which targets will generate binary releases.
+    condition: $TRAVIS_RUST_VERSION = stable
+    tags: true
+  provider: releases
+  skip_cleanup: true
+
+cache: cargo
+before_cache:
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
+
+branches:
+  only:
+    # release tags
+    - /^v\d+\.\d+\.\d+.*$/
+    - master
+
+notifications:
+  email:
+    on_success: never
