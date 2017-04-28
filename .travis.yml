@@ -58,8 +58,11 @@ before_install: set -e
 install:
   - sh ci/install.sh
   - source ~/.cargo/env || true
+  - export PATH="$PATH:$HOME/.cargo/bin"
+  - which rustfmt || cargo install rustfmt
 
 script:
+  - cargo fmt -- --write-mode=diff
   - bash ci/script.sh
 
 after_script: set +e
