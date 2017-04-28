@@ -3,15 +3,14 @@
 
 environment:
   global:
-  # TODO This is the Rust channel that build jobs will use by default but can be
-  # overridden on a case by case basis down below
+  # This is the Rust channel that build jobs will use by default but can be
+  # overridden on a case by case basis down below.
     RUST_VERSION: stable
 
-    # TODO Update this to match the name of your project.
+    # This to match the name of your project.
     CRATE_NAME: file_dedupe
 
-  # TODO These are all the build jobs. Adjust as necessary. Comment out what you
-  # don't need
+  # These are all the build jobs.
   matrix:
     # MinGW
     - TARGET: i686-pc-windows-gnu
@@ -40,9 +39,9 @@ install:
   - rustc -Vv
   - cargo -V
 
-# TODO This is the "test phase", tweak it as you see fit
+# This is the "test phase".
 test_script:
-  # we don't run the "test phase" when doing deploys
+  # we don't run the "test phase" when doing deploys.
   - if [%APPVEYOR_REPO_TAG%]==[false] (
       cargo build --target %TARGET% &&
       cargo build --target %TARGET% --release &&
@@ -53,7 +52,7 @@ test_script:
     )
 
 before_deploy:
-  # TODO Update this to build the artifacts that matter to you
+  # This to build the artifacts that matters.
   - cargo rustc --target %TARGET% --release --bin file_dedupe -- -C lto
   - ps: ci\before_deploy.ps1
 
@@ -63,10 +62,7 @@ deploy:
     secure: h6ohEdYTUov0xX5lHhd3adct9Gt0UvUikaYRDER93Sj68w96DH95RbFpVmOvlJpM
   description: ''
   on:
-    # TODO Here you can pick which targets will generate binary releases
-    # In this example, there are some targets that are tested using the stable
-    # and nightly channels. This condition makes sure there is only one release
-    # for such targets and that's generated using the stable channel
+    # Which targets will generate binary releases
     RUST_VERSION: stable
     appveyor_repo_tag: true
   provider: GitHub

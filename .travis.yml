@@ -6,17 +6,16 @@ language: rust
 services: docker
 sudo: required
 
-# TODO Rust builds on stable by default, this can be
+# Rust builds on stable by default, this can be
 # overridden on a case by case basis down below.
 
 env:
   global:
-    # TODO Update this to match the name of your project.
+    # This to match the name of your project.
     - CRATE_NAME=file_dedupe
 
 matrix:
-  # TODO These are all the build jobs. Adjust as necessary. Comment out what you
-  # don't need
+  # These are all the build jobs.
   include:
     # Linux
     - env: TARGET=i686-unknown-linux-gnu
@@ -69,19 +68,12 @@ before_deploy:
   - sh ci/before_deploy.sh
 
 deploy:
-  # TODO update `api_key.secure`
-  # - Create a `public_repo` GitHub token. Go to: https://github.com/settings/tokens/new
-  # - Encrypt it: `travis encrypt 0123456789012345678901234567890123456789
-  # - Paste the output down here
   api_key:
     secure: "MQuv51ASHj3YZ86dkoSHqWA44QNK33MK+C1kQgdN42b3d8FeBXBwUgy4HJhjYfrpB3IpnFSE9QTYTep7/7Q9ZtdE106ergIuStKwX40aK953FldS3iq3+XU7G91KK1PlagZYoreTepdgd9DdcXPoGXlZFXzpL8uLaOvyBQVnC+cyIyInuXmXediFAc4Jtnw7q61TLpBQ1jQLMiwdfsH7H6gkOhm4bG23kw7Wr3h74bK6P1oJ4w1tkA/6zRXFqVgu9M1F1qouKC/NuUAEQF47UzFsm79nsLwiltDaesdLiXOSD6SNDgQL+h3JoQK1eCZm8lRQ6MnuADxuG5zhdpK/edVd8qQyueuFcyji/IST2nvDqG3B2jmIxNbw4RRZ2K4y4rQmdi4/8ghXynur+gTIlNajTx8IoVTHMBrhCcULkKt3a+e0by2rjd4Z47oPbbwjb5kaHkPkkof9BSqIKy7k67Vg1lVnsYLZs9intex0vmJQ07tCMTU3pSX9aWO8y0vJ2uww8yRepXPzI9PPOOGfd+0zUki9nONBdFN2qmctpBjJxAeT1jOvwi+j2KEI17qlMqTZwVskBzZPDjftiyZVCKOZxeuhjY8W/t34wUyo5l/gWyPeFEpzCVaY4WGZqzAplMErWk6Qgh4IHcts4zEx4BSzFC+uB364u2583hZBuGo="
   file_glob: true
   file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
   on:
-    # TODO Here you can pick which targets will generate binary releases
-    # In this example, there are some targets that are tested using the stable
-    # and nightly channels. This condition makes sure there is only one release
-    # for such targets and that's generated using the stable channel
+    # Which targets will generate binary releases.
     condition: $TRAVIS_RUST_VERSION = stable
     tags: true
   provider: releases
