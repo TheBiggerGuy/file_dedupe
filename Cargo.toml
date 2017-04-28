@@ -1,6 +1,6 @@
 [package]
 name = "file_dedupe"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Guy Taylor <thebigguy.co.uk@gmail.com>"]
 
 [features]
